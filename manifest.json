@@ -1,6 +1,6 @@
-﻿{
-  "short_name": "StatistikNFC",
-  "name": "Dashboard Statistik NFC Sekolah",
+{
+  "short_name": "myFon",
+  "name": "myFon",
   "icons": [
     {
       "src": "icons/Icon-192.png",
