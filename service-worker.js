@@ -1,76 +1,74 @@
-const CACHE_NAME = 'savemyphone-v3';
-const assets = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/app.js'
+const CACHE_NAME = 'dashboard-kehadiran-v19';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './Untitled design.svg'
 ];
 
-// Install service worker
-self.addEventListener('install', evt => {
-  evt.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      cache.addAll(assets);
-    })
-  );
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 
-// Activate and clean old caches
-self.addEventListener('activate', evt => {
-  evt.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    )
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
 
-// Fetch events
-self.addEventListener('fetch', evt => {
-  if (evt.request.method !== 'GET') return;
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
 
-  const requestUrl = new URL(evt.request.url);
-  const isSameOrigin = requestUrl.origin === self.location.origin;
-  const isNavigation = evt.request.mode === 'navigate';
-  if (isNavigation) {
-    // For page navigation, prefer fresh network response so UI updates immediately.
-    evt.respondWith(
-      fetch(evt.request)
-        .then(networkRes => {
-          const copy = networkRes.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put('/index.html', copy));
-          return networkRes;
-        })
-        .catch(() => caches.match('/index.html'))
+  const url = new URL(event.request.url);
+
+  // Jangan intercept request cross-origin (contoh API Google Script/CDN).
+  if (url.origin !== self.location.origin) return;
+
+  // Navigasi halaman: cuba network dulu, fallback ke cache index.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('./index.html'))
     );
     return;
   }
 
-  if (isSameOrigin) {
-    // For local assets (app.js, manifest, icons), prefer latest network content.
-    evt.respondWith(
-      fetch(evt.request)
-        .then(networkRes => {
-          if (networkRes && networkRes.status === 200) {
-            const copy = networkRes.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(evt.request, copy));
+  // Untuk script/style/document, utamakan network supaya update terbaru terus dipakai.
+  const destination = event.request.destination;
+  if (destination === 'script' || destination === 'style' || destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
           }
-          return networkRes;
+          return response;
         })
-        .catch(() => caches.match(evt.request))
+        .catch(() => caches.match(event.request))
     );
     return;
   }
 
-  evt.respondWith(
-    caches.match(evt.request).then(cacheRes => {
-      if (cacheRes) return cacheRes;
-      return fetch(evt.request);
+  // Aset statik same-origin: cache-first.
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (!response || !response.ok) return response;
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      });
     })
   );
 });
+
+
+
+

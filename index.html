@@ -353,6 +353,11 @@
       min-height: 250px;
     }
 
+    .chart-wrap-sm {
+      position: relative;
+      min-height: 220px;
+    }
+
     .chart-wrap canvas {
       width: 100% !important;
       height: 100% !important;
@@ -584,12 +589,16 @@
           </div>
         </div>
         <div class="col-md-4">
+          <label class="form-label" for="filterTarikh">Carian Tarikh Rekod</label>
+          <input id="filterTarikh" type="date" class="form-control">
+        </div>
+        <div class="col-md-4">
           <label class="form-label" for="filterKelas">Pilih Kelas</label>
           <select id="filterKelas" class="form-select">
             <option value="">Semua Kelas</option>
           </select>
         </div>
-        <div class="col-md-4 d-flex align-items-end">
+        <div class="col-md-12 d-flex align-items-end">
           <div class="today-card w-100">
             <div class="today-icon">🔄</div>
             <div class="today-meta">
@@ -602,6 +611,34 @@
       <div id="statusLine" class="status-line">Sedia untuk tarik data.</div>
       <div id="refreshInfo" class="status-line">Auto-refresh: setiap 10 saat.</div>
       <div id="debugLine" class="debug-line"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Simpan Manual (Murid Gagal Scan)</h2>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="manualKelas">Pilih Kelas</label>
+          <select id="manualKelas" class="form-select">
+            <option value="">Pilih kelas</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="manualNama">Pilih Nama Murid</label>
+          <select id="manualNama" class="form-select" disabled>
+            <option value="">Pilih nama murid</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="manualPassword">Password Guru</label>
+          <input id="manualPassword" type="password" class="form-control" placeholder="Masukkan password guru">
+        </div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-md-4">
+          <button id="btnSimpanManual" class="btn-modern" type="button">Simpan Rekod Manual</button>
+        </div>
+      </div>
+      <div id="manualStatus" class="status-line">Gunakan borang ini jika murid gagal scan.</div>
     </section>
 
     <section class="panel">
@@ -634,6 +671,26 @@
           <canvas id="kelasSimpanChart"></canvas>
         </div>
         <div id="chartEmptyState" class="chart-empty"></div>
+      </div>
+      <div class="row g-3 mb-2">
+        <div class="col-lg-5">
+          <div class="chart-panel h-100">
+            <div class="chart-title">Carta Donut Status Rekod</div>
+            <div class="chart-wrap-sm">
+              <canvas id="statusDonutChart"></canvas>
+            </div>
+            <div id="statusDonutEmptyState" class="chart-empty"></div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="chart-panel h-100">
+            <div class="chart-title">Trend Rekod 7 Hari Terakhir</div>
+            <div class="chart-wrap-sm">
+              <canvas id="trendHarianChart"></canvas>
+            </div>
+            <div id="trendHarianEmptyState" class="chart-empty"></div>
+          </div>
+        </div>
       </div>
       <div class="table-head">
         <h2>Rekod Imbasan</h2>
