@@ -25,6 +25,8 @@ $(document).ready(function() {
   const chartEmptyState = document.getElementById("chartEmptyState");
   const statusDonutEmptyState = document.getElementById("statusDonutEmptyState");
   const trendHarianEmptyState = document.getElementById("trendHarianEmptyState");
+  const toggleManualPanel = document.getElementById("toggleManualPanel");
+  const manualPanelBody = document.getElementById("manualPanelBody");
   const manualKelas = document.getElementById("manualKelas");
   const manualNama = document.getElementById("manualNama");
   const manualPassword = document.getElementById("manualPassword");
@@ -751,6 +753,19 @@ $(document).ready(function() {
 
   if (btnSimpanManual) {
     btnSimpanManual.addEventListener("click", simpanManualGagalScan);
+  }
+
+  if (toggleManualPanel && manualPanelBody) {
+    toggleManualPanel.addEventListener("click", function() {
+      const isHidden = manualPanelBody.classList.contains("d-none");
+      if (isHidden) {
+        manualPanelBody.classList.remove("d-none");
+        toggleManualPanel.textContent = "Sembunyikan Menu Manual";
+      } else {
+        manualPanelBody.classList.add("d-none");
+        toggleManualPanel.textContent = "Buka Menu Manual";
+      }
+    });
   }
 
   ensureTarikhFilterDefault();

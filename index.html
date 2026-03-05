@@ -179,6 +179,12 @@
       color: #fff;
     }
 
+    .btn-inline {
+      width: auto;
+      min-width: 180px;
+      padding: 0 16px;
+    }
+
     .status-line {
       margin-top: 12px;
       color: var(--text-muted);
@@ -486,6 +492,11 @@
         width: 100%;
       }
 
+      .top-filter-row > .filter-inline {
+        width: 50% !important;
+        flex: 0 0 50%;
+      }
+
       .btn-modern {
         min-height: 44px;
         font-size: 0.95rem;
@@ -577,8 +588,8 @@
     </section>
 
     <section class="panel">
-      <div class="row g-3">
-        <div class="col-md-4">
+      <div class="row g-3 top-filter-row">
+        <div class="col-md-4 col-12">
           <label class="form-label">Paparan Tarikh</label>
           <div id="todayPill" class="today-card">
             <div class="today-meta">
@@ -588,17 +599,17 @@
             <div class="live-dot"></div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 col-6 filter-inline">
           <label class="form-label" for="filterTarikh">Carian Tarikh Rekod</label>
           <input id="filterTarikh" type="date" class="form-control">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 col-6 filter-inline">
           <label class="form-label" for="filterKelas">Pilih Kelas</label>
           <select id="filterKelas" class="form-select">
             <option value="">Semua Kelas</option>
           </select>
         </div>
-        <div class="col-md-12 d-flex align-items-end">
+        <div class="col-md-12 col-12 d-flex align-items-end">
           <div class="today-card w-100">
             <div class="today-icon">🔄</div>
             <div class="today-meta">
@@ -614,31 +625,36 @@
     </section>
 
     <section class="panel">
-      <h2 class="panel-title">Simpan Manual (Murid Gagal Scan)</h2>
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label" for="manualKelas">Pilih Kelas</label>
-          <select id="manualKelas" class="form-select">
-            <option value="">Pilih kelas</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="manualNama">Pilih Nama Murid</label>
-          <select id="manualNama" class="form-select" disabled>
-            <option value="">Pilih nama murid</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="manualPassword">Password Guru</label>
-          <input id="manualPassword" type="password" class="form-control" placeholder="Masukkan password guru">
-        </div>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="panel-title mb-0">Simpan Manual (Murid Gagal Scan)</h2>
+        <button id="toggleManualPanel" class="btn-modern btn-inline" type="button">Buka Menu Manual</button>
       </div>
-      <div class="row g-3 mt-1">
-        <div class="col-md-4">
-          <button id="btnSimpanManual" class="btn-modern" type="button">Simpan Rekod Manual</button>
+      <div id="manualPanelBody" class="d-none mt-3">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="manualKelas">Pilih Kelas</label>
+            <select id="manualKelas" class="form-select">
+              <option value="">Pilih kelas</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="manualNama">Pilih Nama Murid</label>
+            <select id="manualNama" class="form-select" disabled>
+              <option value="">Pilih nama murid</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="manualPassword">Password Guru</label>
+            <input id="manualPassword" type="password" class="form-control" placeholder="Masukkan password guru">
+          </div>
         </div>
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <button id="btnSimpanManual" class="btn-modern" type="button">Simpan Rekod Manual</button>
+          </div>
+        </div>
+        <div id="manualStatus" class="status-line">Gunakan borang ini jika murid gagal scan.</div>
       </div>
-      <div id="manualStatus" class="status-line">Gunakan borang ini jika murid gagal scan.</div>
     </section>
 
     <section class="panel">
@@ -665,15 +681,17 @@
           </div>
         </div>
       </div>
-      <div class="chart-panel">
-        <div class="chart-title">Carta Bar Murid Simpan Telefon Mengikut Kelas</div>
-        <div class="chart-wrap">
-          <canvas id="kelasSimpanChart"></canvas>
-        </div>
-        <div id="chartEmptyState" class="chart-empty"></div>
-      </div>
       <div class="row g-3 mb-2">
-        <div class="col-lg-5">
+        <div class="col-lg-4">
+          <div class="chart-panel h-100">
+            <div class="chart-title">Carta Bar Murid Simpan Telefon Mengikut Kelas</div>
+            <div class="chart-wrap-sm">
+              <canvas id="kelasSimpanChart"></canvas>
+            </div>
+            <div id="chartEmptyState" class="chart-empty"></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
           <div class="chart-panel h-100">
             <div class="chart-title">Carta Donut Status Rekod</div>
             <div class="chart-wrap-sm">
@@ -682,7 +700,7 @@
             <div id="statusDonutEmptyState" class="chart-empty"></div>
           </div>
         </div>
-        <div class="col-lg-7">
+        <div class="col-lg-4">
           <div class="chart-panel h-100">
             <div class="chart-title">Trend Rekod 7 Hari Terakhir</div>
             <div class="chart-wrap-sm">
