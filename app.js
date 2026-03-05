@@ -222,10 +222,7 @@ $(document).ready(function() {
   }
 
   function ensureTarikhFilterDefault() {
-    if (!filterTarikh) return;
-    if (!filterTarikh.value) {
-      filterTarikh.value = getTodayFilterValue();
-    }
+    return;
   }
 
   function updateTodayPill() {
@@ -559,8 +556,7 @@ $(document).ready(function() {
     const opts = options || {};
     const silent = !!opts.silent;
 
-    ensureTarikhFilterDefault();
-    const tarikh = filterTarikh ? filterTarikh.value : getTodayFilterValue();
+    const tarikh = filterTarikh ? filterTarikh.value : "";
     const kelas = $("#filterKelas").val();
 
     const params = new URLSearchParams();
@@ -820,7 +816,6 @@ $(document).ready(function() {
     });
   }
 
-  ensureTarikhFilterDefault();
   updateTodayPill();
   setInterval(updateTodayPill, 1000);
   muatMasterMurid();
