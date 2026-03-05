@@ -508,12 +508,15 @@
       .charts-inline-row {
         flex-wrap: nowrap;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
       }
 
       .charts-inline-row > div {
-        width: 33.333% !important;
-        flex: 0 0 33.333%;
-        max-width: 33.333%;
+        width: 85% !important;
+        flex: 0 0 85%;
+        max-width: 85%;
+        scroll-snap-align: start;
       }
 
       .btn-modern {
