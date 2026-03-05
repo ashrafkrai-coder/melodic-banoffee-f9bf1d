@@ -150,6 +150,14 @@
       min-height: 46px;
     }
 
+    #manualKelas,
+    #manualNama {
+      min-height: 40px;
+      font-size: 0.88rem;
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
+    }
+
     .form-select option {
       color: #1f1738;
       background: #ffffff;
@@ -497,6 +505,17 @@
         flex: 0 0 50%;
       }
 
+      .charts-inline-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+
+      .charts-inline-row > div {
+        width: 33.333% !important;
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+      }
+
       .btn-modern {
         min-height: 44px;
         font-size: 0.95rem;
@@ -609,15 +628,6 @@
             <option value="">Semua Kelas</option>
           </select>
         </div>
-        <div class="col-md-12 col-12 d-flex align-items-end">
-          <div class="today-card w-100">
-            <div class="today-icon">🔄</div>
-            <div class="today-meta">
-              <div class="today-title">Live Sync</div>
-              <div class="today-value">Aktif</div>
-            </div>
-          </div>
-        </div>
       </div>
       <div id="statusLine" class="status-line">Sedia untuk tarik data.</div>
       <div id="refreshInfo" class="status-line">Auto-refresh: setiap 10 saat.</div>
@@ -681,7 +691,7 @@
           </div>
         </div>
       </div>
-      <div class="row g-3 mb-2">
+      <div class="row g-3 mb-2 charts-inline-row">
         <div class="col-lg-4">
           <div class="chart-panel h-100">
             <div class="chart-title">Carta Bar Murid Simpan Telefon Mengikut Kelas</div>

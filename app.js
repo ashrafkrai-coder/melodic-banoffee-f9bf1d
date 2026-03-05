@@ -38,6 +38,7 @@ $(document).ready(function() {
   let trendHarianChart = null;
   let hasLoadedDataOnce = false;
   let namaByKelasMap = new Map();
+  let latestAllRows = [];
 
   var table = $("#jadualStatistik").DataTable({
     dom: "Bfrtip",
@@ -373,9 +374,25 @@ $(document).ready(function() {
   function populateManualNamaOptions(kelas) {
     if (!manualNama) return;
     const key = kelas && namaByKelasMap.has(kelas) ? kelas : "Semua";
-    const names = namaByKelasMap.has(key)
-      ? Array.from(namaByKelasMap.get(key)).sort(function(a, b) { return a.localeCompare(b, "ms"); })
+    const baseNames = namaByKelasMap.has(key)
+      ? Array.from(namaByKelasMap.get(key))
       : [];
+    const selectedTarikh = (filterTarikh && filterTarikh.value) ? filterTarikh.value : getTodayFilterValue();
+    const scannedSet = new Set();
+
+    latestAllRows.forEach(function(row) {
+      const rowNama = String(row[0] || "").trim();
+      const rowKelas = String(row[1] || "").trim();
+      const rowTarikh = normalizeDateToInputFormat(row[2]);
+      if (!rowNama || rowNama === "-") return;
+      if (kelas && rowKelas !== kelas) return;
+      if (selectedTarikh && rowTarikh !== selectedTarikh) return;
+      scannedSet.add(rowNama);
+    });
+
+    const names = baseNames
+      .filter(function(nama) { return !scannedSet.has(nama); })
+      .sort(function(a, b) { return a.localeCompare(b, "ms"); });
 
     manualNama.innerHTML = '<option value="">Pilih nama murid</option>';
     names.forEach(function(nama) {
@@ -560,6 +577,7 @@ $(document).ready(function() {
           return v !== "" && v !== "-";
         });
       });
+      latestAllRows = allRows;
 
       populateKelasOptions(allRows, kelas);
       namaByKelasMap = buildNamaByKelas(allRows);
