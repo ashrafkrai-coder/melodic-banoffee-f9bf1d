@@ -525,11 +525,16 @@
       }
 
       .widget-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .widget {
         padding: 12px;
+      }
+
+      .widget-total,
+      .widget-percent {
+        grid-column: span 2;
       }
 
       .widget-value {
@@ -633,7 +638,7 @@
         </div>
       </div>
       <div id="statusLine" class="status-line">Sedia untuk tarik data.</div>
-      <div id="refreshInfo" class="status-line">Auto-refresh: setiap 10 saat.</div>
+      <div id="refreshInfo" class="status-line">Auto-refresh: setiap 60 saat.</div>
       <div id="debugLine" class="debug-line"></div>
     </section>
 
@@ -672,19 +677,19 @@
 
     <section class="panel">
       <div class="widget-grid">
-        <div class="widget">
+        <div class="widget widget-total">
           <div class="widget-label">Jumlah Rekod</div>
           <div id="widgetTotal" class="widget-value">0</div>
         </div>
-        <div class="widget">
+        <div class="widget widget-simpan">
           <div class="widget-label">Status Disimpan</div>
           <div id="widgetSimpan" class="widget-value">0</div>
         </div>
-        <div class="widget">
+        <div class="widget widget-ambil">
           <div class="widget-label">Status Diambil</div>
           <div id="widgetAmbil" class="widget-value">0</div>
         </div>
-        <div class="widget">
+        <div class="widget widget-percent">
           <div class="widget-label">Peratus Diambil</div>
           <div id="widgetPercent" class="widget-value">0%</div>
           <div class="widget-progress">

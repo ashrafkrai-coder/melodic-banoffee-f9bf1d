@@ -10,6 +10,9 @@ $(document).ready(function() {
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4w2GYtoSmL1-aWZ4QU3cfy4yps_g707AARWWYQyKquMtpR9UgkhrCrWAsjbw2y6mH/exec";
   const SHEET_ID = "1qg1D0lhokOzR3sfecmQK83tdsxJq6HAPwYtP8K6DpH4";
   const SHEET_NAME = "log_imbas";
+  const MASTER_SHEET_NAME = "Data";
+  const MANUAL_KELAS_ORDER = ["5 Ikhlas", "5 Jujur", "5 Hormat", "5 Gigih", "5 Bakti", "5 Cekal"];
+  const KELAS_CANONICAL_MAP = new Map(MANUAL_KELAS_ORDER.map(function(k) { return [k.toLowerCase().replace(/\s+/g, " ").trim(), k]; }));
 
   const statusLine = document.getElementById("statusLine");
   const recordCount = document.getElementById("recordCount");
@@ -33,12 +36,13 @@ $(document).ready(function() {
   const btnSimpanManual = document.getElementById("btnSimpanManual");
   const manualStatus = document.getElementById("manualStatus");
   const GURU_PASSWORD = "myFon1234";
+  const AUTO_REFRESH_MS = 60000;
   let kelasSimpanChart = null;
   let statusDonutChart = null;
   let trendHarianChart = null;
   let hasLoadedDataOnce = false;
+  let hasLoadedMasterMurid = false;
   let namaByKelasMap = new Map();
-  let latestAllRows = [];
 
   var table = $("#jadualStatistik").DataTable({
     dom: "Bfrtip",
@@ -75,10 +79,7 @@ $(document).ready(function() {
   }
 
   function setLoadingState(isLoading) {
-    if (!statusLine) return;
-    if (isLoading) {
-      statusLine.textContent = "Sedang tarik data live hari ini...";
-    }
+    return;
   }
 
   function renderKelasSimpanChart(rows) {
@@ -334,27 +335,10 @@ $(document).ready(function() {
     }
   }
 
-  function buildNamaByKelas(rows) {
-    const map = new Map();
-    rows.forEach(function(row) {
-      const nama = String(row[0] || "").trim();
-      const kelas = String(row[1] || "").trim();
-      if (!nama || nama === "-") return;
-      const effectiveKelas = (!kelas || kelas === "-") ? "Tidak Diketahui" : kelas;
-      if (!map.has("Semua")) map.set("Semua", new Set());
-      map.get("Semua").add(nama);
-      if (!map.has(effectiveKelas)) map.set(effectiveKelas, new Set());
-      map.get(effectiveKelas).add(nama);
-    });
-    return map;
-  }
-
   function populateManualKelasOptions(map) {
     if (!manualKelas) return;
     const previous = manualKelas.value;
-    const kelasList = Array.from(map.keys()).filter(function(k) { return k !== "Semua"; }).sort(function(a, b) {
-      return a.localeCompare(b, "ms");
-    });
+    const kelasList = MANUAL_KELAS_ORDER.slice();
 
     manualKelas.innerHTML = '<option value="">Pilih kelas</option>';
     kelasList.forEach(function(kelas) {
@@ -374,25 +358,13 @@ $(document).ready(function() {
   function populateManualNamaOptions(kelas) {
     if (!manualNama) return;
     const key = kelas && namaByKelasMap.has(kelas) ? kelas : "Semua";
-    const baseNames = namaByKelasMap.has(key)
+    const names = namaByKelasMap.has(key)
       ? Array.from(namaByKelasMap.get(key))
       : [];
-    const selectedTarikh = (filterTarikh && filterTarikh.value) ? filterTarikh.value : getTodayFilterValue();
-    const scannedSet = new Set();
-
-    latestAllRows.forEach(function(row) {
-      const rowNama = String(row[0] || "").trim();
-      const rowKelas = String(row[1] || "").trim();
-      const rowTarikh = normalizeDateToInputFormat(row[2]);
-      if (!rowNama || rowNama === "-") return;
-      if (kelas && rowKelas !== kelas) return;
-      if (selectedTarikh && rowTarikh !== selectedTarikh) return;
-      scannedSet.add(rowNama);
-    });
-
-    const names = baseNames
-      .filter(function(nama) { return !scannedSet.has(nama); })
-      .sort(function(a, b) { return a.localeCompare(b, "ms"); });
+    names.sort(function(a, b) { return a.localeCompare(b, "ms"); });
+    if (manualStatus && names.length) {
+      manualStatus.textContent = "Gunakan borang ini jika murid gagal scan.";
+    }
 
     manualNama.innerHTML = '<option value="">Pilih nama murid</option>';
     names.forEach(function(nama) {
@@ -425,6 +397,72 @@ $(document).ready(function() {
       if (foundKey) return item[foundKey];
     }
     return "";
+  }
+
+  function normalizeKelasLabel(value) {
+    return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function toCanonicalManualKelas(value) {
+    const key = normalizeKelasLabel(value);
+    return KELAS_CANONICAL_MAP.get(key) || "";
+  }
+
+  async function muatMasterMurid(options) {
+    const opts = options || {};
+    const force = !!opts.force;
+    if (hasLoadedMasterMurid && !force) return;
+
+    const params = new URLSearchParams();
+    params.append("action", "readData");
+    params.append("sheetId", SHEET_ID);
+    params.append("sheetName", MASTER_SHEET_NAME);
+    const url = `${SCRIPT_URL}?${params.toString()}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: { "Accept": "application/json" }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (payload && payload.error) {
+        throw new Error(payload.error);
+      }
+
+      const data = Array.isArray(payload) ? payload : (Array.isArray(payload.data) ? payload.data : []);
+      const map = new Map();
+      map.set("Semua", new Set());
+      MANUAL_KELAS_ORDER.forEach(function(k) {
+        map.set(k, new Set());
+      });
+
+      data.forEach(function(item) {
+        const nama = String(Array.isArray(item)
+          ? (item[0] || "")
+          : (getObjectValueByAliases(item, ["nama", "namaMurid", "nama murid", "Nama Murid", "studentName"]) || "")).trim();
+        const kelasRaw = String(Array.isArray(item)
+          ? (item[1] || "")
+          : (getObjectValueByAliases(item, ["kelas", "Kelas", "class"]) || "")).trim();
+        const kelas = toCanonicalManualKelas(kelasRaw);
+
+        if (!nama || !kelas) return;
+        map.get("Semua").add(nama);
+        map.get(kelas).add(nama);
+      });
+
+      namaByKelasMap = map;
+      populateManualKelasOptions(namaByKelasMap);
+      populateManualNamaOptions(manualKelas ? manualKelas.value : "");
+      hasLoadedMasterMurid = true;
+    } catch (error) {
+      console.error("Ralat muatMasterMurid:", error);
+      if (manualStatus) {
+        manualStatus.textContent = `Gagal muat senarai murid: ${error.message}`;
+      }
+    }
   }
 
   function getCurrentKualaLumpurDateTime() {
@@ -577,12 +615,8 @@ $(document).ready(function() {
           return v !== "" && v !== "-";
         });
       });
-      latestAllRows = allRows;
-
       populateKelasOptions(allRows, kelas);
-      namaByKelasMap = buildNamaByKelas(allRows);
-      populateManualKelasOptions(namaByKelasMap);
-      populateManualNamaOptions(manualKelas ? manualKelas.value : "");
+      await muatMasterMurid();
       const effectiveTarikh = tarikh || "";
       const filteredRows = applyFilters(allRows, effectiveTarikh, kelas);
       const uniqueKelasCount = new Set(allRows.map(function(r) { return String(r[1] || "").trim(); }).filter(Boolean)).size;
@@ -594,7 +628,7 @@ $(document).ready(function() {
       renderTrendHarianChart(allRows, kelas);
       const tarikhText = effectiveTarikh ? ` untuk tarikh ${effectiveTarikh}` : "";
       statusLine.textContent = `Data berjaya dimuat${tarikhText}: ${filteredRows.length}/${allRows.length} rekod.`;
-      refreshInfo.textContent = `Auto-refresh: setiap 10 saat. Kemaskini terakhir: ${nowText()}.`;
+      refreshInfo.textContent = `Auto-refresh: setiap 60 saat. Kemaskini terakhir: ${nowText()}.`;
       debugLine.textContent = "";
       hasLoadedDataOnce = true;
     } catch (error) {
@@ -614,7 +648,7 @@ $(document).ready(function() {
 
   setInterval(function() {
     window.muatData({ silent: true });
-  }, 10000);
+  }, AUTO_REFRESH_MS);
 
   document.getElementById("filterKelas").addEventListener("change", function() {
     window.muatData({ silent: true });
@@ -789,5 +823,6 @@ $(document).ready(function() {
   ensureTarikhFilterDefault();
   updateTodayPill();
   setInterval(updateTodayPill, 1000);
+  muatMasterMurid();
   window.muatData({ silent: true });
 });
